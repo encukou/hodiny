@@ -8,6 +8,12 @@ from machine import idle
 DST_START = 3, 28, 3
 DST_END = 31, 10, 3
 
+with open('settings.txt') as f:
+    # The file settings.txt must have wifi and NTP config on 3 lines:
+    SSID = f.readline().strip()
+    PASSWORD = f.readline().strip()
+    ntptime.host = f.readline().strip()
+
 def cettime():
     # From https://forum.micropython.org/viewtopic.php?f=2&t=4034
     # Micropython esp8266
@@ -44,13 +50,20 @@ digits = {
     "n": 0b00101010,
     "t": 0b00011110,
     "p": 0b11001110,
+    "a": 0b11101110,
     " ": 0b00000000,
     "_": 0b00010000,
     "-": 0b00000010,
     "~": 0b10000000,
+    "⠁": 0b10000000,
+    "⠂": 0b01000000,
+    "⠄": 0b00100000,
+    "⠠": 0b00010000,
+    "⠐": 0b00001000,
+    "⠈": 0b00000100,
 }
 
-ser = Pin(5, Pin.OUT)  # D1
+ser = Pin(15, Pin.OUT)  # D8
 rclk = Pin(4, Pin.OUT)  # D2
 srclk = Pin(2, Pin.OUT)  # D4
 srclr_ = Pin(14, Pin.OUT)  # D5
@@ -59,7 +72,7 @@ digit_pins = [
     Pin(16, Pin.OUT),  # D0
     Pin(12, Pin.OUT),  # D6
     Pin(13, Pin.OUT),  # D7
-    Pin(15, Pin.OUT),  # D8
+    Pin(5, Pin.OUT),  # D1
 ]
 
 rclk(0)
@@ -92,23 +105,25 @@ def show_str(string):
 
 wlan = network.WLAN(network.STA_IF)
 wlan.active(True)
+show_str("can-")
+wlan.scan()
 n_tries = 0
-if not wlan.isconnected():
-    wlan.connect('Tlapicky', '4a2ouska')
-    while not wlan.isconnected():
-        start = time.ticks_ms() # get millisecond counter
-        while True:
-            delta = time.ticks_diff(time.ticks_ms(), start)
-            if delta > 100:
-                break
-            show_str("con" + "_-~"[n_tries % 3])
-        n_tries += 1
+while not wlan.isconnected():
+    if n_tries % 100 == 0:
+        wlan.connect(SSID, PASSWORD)
+        idle()
+    start = time.ticks_ms() # get millisecond counter
+    while True:
+        delta = time.ticks_diff(time.ticks_ms(), start)
+        if delta > 100:
+            break
+        show_str("con" + "⠁⠁⠁⠁⠁⠂⠄⠠⠐⠈"[n_tries % 10])
+    n_tries += 1
 
 display_off()
 
 def ntp_sync():
     global NEXT_SYNC
-    ntptime.host = '192.168.1.1'
     n_tries = 0
     while True:
         try:
