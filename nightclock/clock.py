@@ -55,27 +55,37 @@ rclk = Pin(4, Pin.OUT)  # D2
 srclk = Pin(2, Pin.OUT)  # D4
 srclr_ = Pin(14, Pin.OUT)  # D5
 button = Pin(0, Pin.IN)  # D3
+digit_pins = [
+    Pin(16, Pin.OUT),  # D0
+    Pin(12, Pin.OUT),  # D6
+    Pin(13, Pin.OUT),  # D7
+    Pin(15, Pin.OUT),  # D8
+]
 
 rclk(0)
 srclk(1)
 srclr_(0)
 srclr_(1)
 
-def push_bits(*bytes):
-    rclk(0)
-    for byte in bytes:
+def show_bytes(bytes):
+    mask = 0b01111111
+    prev_pin = digit_pins[-1]
+    for current_pin, byte in zip(digit_pins, bytes):
+        rclk(0)
         for b in range(8):
             srclk(0)
             ser((byte >> b) & 1)
             srclk(1)
-    rclk(1)
+        prev_pin(1)
+        rclk(1)
+        current_pin(0)
+        prev_pin = current_pin
 
-def show_bytes(bytes):
-    mask = 0b01111111
-    for byte in bytes:
-        push_bits(mask, byte)
-        mask >>= 1
-        mask |= 0b10000000
+def display_off():
+    for pin in digit_pins:
+        pin(1)
+
+display_off()
 
 def show_str(string):
     show_bytes(digits[c] for c in string)
@@ -94,7 +104,7 @@ if not wlan.isconnected():
             show_str("con" + "_-~"[n_tries % 3])
         n_tries += 1
 
-show_str("    ")
+display_off()
 
 def ntp_sync():
     global NEXT_SYNC
@@ -117,7 +127,7 @@ def ntp_sync():
     NEXT_SYNC = yr, mo, dy, hr + 1
 
 ntp_sync()
-show_str("    ")
+display_off()
 
 while True:
     if not button():
@@ -132,7 +142,7 @@ while True:
                 digits[mn % 10] | (sc & 1),
             )
             show_bytes(digs)
-        show_str("    ")
+        display_off()
         if localtime > NEXT_SYNC:
             ntp_sync()
     idle()
