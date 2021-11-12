@@ -34,7 +34,20 @@ def cettime():
         cet=time.localtime(now+3600) # CET:  UTC+1H
     return(cet)
 
+def rot180(src):
+    """Oh no, I built the thing upside down! Rotate in software"""
+    a = bool(src & 0b10000000)
+    b = bool(src & 0b01000000)
+    c = bool(src & 0b00100000)
+    d = bool(src & 0b00010000)
+    e = bool(src & 0b00001000)
+    f = bool(src & 0b00000100)
+    g = bool(src & 0b00000010)
+    p = bool(src & 0b00000001)
+    return (d<<7) | (e<<6) | (f<<5) | (a<<4) | (b<<3) | (c<<2) | (g<<1) | p
+
 digits = {
+    n: rot180(b) for n, b in {
     0: 0b11111100,
     1: 0b01100000,
     2: 0b11011010,
@@ -61,7 +74,7 @@ digits = {
     "⠠": 0b00010000,
     "⠐": 0b00001000,
     "⠈": 0b00000100,
-}
+}.items()}
 
 ser = Pin(15, Pin.OUT)  # D8
 rclk = Pin(4, Pin.OUT)  # D2
@@ -69,10 +82,11 @@ srclk = Pin(2, Pin.OUT)  # D4
 srclr_ = Pin(14, Pin.OUT)  # D5
 button = Pin(0, Pin.IN)  # D3
 digit_pins = [
-    Pin(16, Pin.OUT),  # D0
-    Pin(12, Pin.OUT),  # D6
-    Pin(13, Pin.OUT),  # D7
+    # Oh no, I built the thing upside down! Rhese are reversed.
     Pin(5, Pin.OUT),  # D1
+    Pin(13, Pin.OUT),  # D7
+    Pin(12, Pin.OUT),  # D6
+    Pin(16, Pin.OUT),  # D0
 ]
 
 rclk(0)
@@ -151,10 +165,10 @@ while True:
             if button():
                 break
             digs = (
-                digits[(hr // 10) % 10],
-                digits[hr % 10] | 1,
-                digits[(mn // 10) % 10],
-                digits[mn % 10] | (sc & 1),
+                digits[(hr // 10) % 10] | (sc & 1),
+                digits[hr % 10],
+                digits[(mn // 10) % 10] | 1,
+                digits[mn % 10],
             )
             show_bytes(digs)
         display_off()
