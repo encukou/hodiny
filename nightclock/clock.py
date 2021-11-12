@@ -81,7 +81,6 @@ srclr_(0)
 srclr_(1)
 
 def show_bytes(bytes):
-    mask = 0b01111111
     prev_pin = digit_pins[-1]
     for current_pin, byte in zip(digit_pins, bytes):
         rclk(0)
@@ -108,21 +107,21 @@ wlan.active(True)
 show_str("can-")
 wlan.scan()
 n_tries = 0
+print('Connecting...')
 while not wlan.isconnected():
     if n_tries % 100 == 0:
         wlan.connect(SSID, PASSWORD)
         idle()
     start = time.ticks_ms() # get millisecond counter
-    while True:
-        delta = time.ticks_diff(time.ticks_ms(), start)
-        if delta > 100:
-            break
-        show_str("con" + "⠁⠁⠁⠁⠁⠂⠄⠠⠐⠈"[n_tries % 10])
+    sleep(0.1)
+    show_str("⠁⠁⠁⠁⠁⠂⠄⠠⠐⠈"[n_tries % 10])
     n_tries += 1
+print('Connected')
 
 display_off()
 
 def ntp_sync():
+    print('NTP sync...')
     global NEXT_SYNC
     n_tries = 0
     while True:
@@ -140,6 +139,7 @@ def ntp_sync():
 
     yr, mo, dy, hr, mn, sc, wday, yday = cettime()
     NEXT_SYNC = yr, mo, dy, hr + 1
+    print('synced')
 
 ntp_sync()
 display_off()
