@@ -1,5 +1,5 @@
 
-HANDLE_HEIGHT = 65;
+HANDLE_HEIGHT = 80;
 MCU_HOLE_W = 51;
 
 module box (sizes, centering=[1, 1, 1], extra_negative=[0, 0, 0]) {
@@ -16,6 +16,8 @@ module box (sizes, centering=[1, 1, 1], extra_negative=[0, 0, 0]) {
     }
 }
 
+$fn=30;
+
 module hook () {
     difference () {
         hull () {
@@ -23,8 +25,8 @@ module hook () {
                 for (x=[0, 1]) translate ([x*HANDLE_HEIGHT, 0, 0]) {
                     cylinder (1, r=2.5+x*4);
                 }
-                translate ([HANDLE_HEIGHT, 0, 10]) {
-                    sphere (r=5);
+                translate ([HANDLE_HEIGHT, 0, 5]) {
+                    sphere (r=5, $fn=60);
                 }
             }
         }
@@ -33,9 +35,11 @@ module hook () {
             cylinder (10, r=3/2, $fn=20);
         }
         hull () {
-            for (y=[-1, 1]) for (x=[-1, 1]) translate ([x*40, y*18, -1]) {
+            for (y=[-1, 1]) for (x=[-1, 1]) translate ([x*45, y*18, -1]) {
                 cylinder (10, r=5);
             }
         }
     }
 }
+
+hook();
